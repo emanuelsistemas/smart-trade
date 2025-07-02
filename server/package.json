@@ -1,0 +1,26 @@
+{
+  "name": "@smart-trade/server",
+  "version": "1.0.0",
+  "description": "Backend do sistema Smart-Trade",
+  "main": "dist/main.js",
+  "scripts": {
+    "dev": "nodemon src/main.ts",
+    "build": "tsc",
+    "start": "node dist/main.js",
+    "test": "jest",
+    "test:watch": "jest --watch"
+  },
+  "dependencies": {
+    "winston": "^3.11.0",
+    "dotenv": "^16.3.1"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.6",
+    "typescript": "^5.3.3",
+    "nodemon": "^3.0.2",
+    "ts-node": "^10.9.2",
+    "jest": "^29.7.0",
+    "@types/jest": "^29.5.11",
+    "ts-jest": "^29.1.1"
+  }
+}

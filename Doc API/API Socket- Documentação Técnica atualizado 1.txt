@@ -1,0 +1,1484 @@
+﻿Especificação Especificação das 
+Documento 
+
+Funcionalidades 
+ 
+
+Projeto Cedro Crystal Módulo SERVER 
+   
+Elaborado Allan Kardec Silva Soares Data Criação 18/11/2005 
+
+ 
+Euler Pereira da Silva Júnior 
+Jheferson 
+
+Revisão Gelson Data Revisão 22/04/2024 
+Fabrício Haro 
+José Eduardo  
+
+ 
+ Objetivo  
+
+Esse documento tem como objetivo descrever como a conexão com o Cedro Crystal 
+pode ser estabelecida, os modos de operação, quais os comandos disponíveis e os formatos 
+das mensagens enviadas decorrentes da utilização desses comandos. 
+
+ 
+ Estabelecimento de conexão  
+
+ 
+A comunicação com o Cedro Crystal pode ser estabelecida utilizando o protocolo de 
+
+comunicação Telnet, que se baseia no protocolo de rede TCP, através da porta 81. Ao 
+estabelecer a conexão com o Cedro Crystal, será solicitada a autenticação do usuário e sua 
+senha. Então, o usuário receberá a confirmação de conexão e então a conexão estará 
+disponível para o envio de comandos. 
+
+ 
+Após abrir uma conexão, você terá que enviar três parâmetros: 
+
+1. Software Key: caso não tenha apenas aperte [ENTER]. 
+2. Username. 
+3. Password. 
+
+ 
+Depois de receber a mensagem “You are connected”, você já pode começar a pedir os dados 
+através de comandos. 
+
+ 
+
+
+
+ 
+
+ Observações  
+ 
+
+Dependendo da quantidade de comandos que o usuário assina simultaneamente, o 
+fluxo de dados entre o servidor e o cliente pode ser enorme. Caso o cliente não consiga 
+processar as mensagens, e o socket (camada TCP) comece a enfileirar as mensagens, o 
+servidor irá desconectar o usuário. Para evitar isso, recomendamos que a aplicação tenha uma 
+thread responsável só para remover as mensagens do socket, e enviar para outra thread fazer 
+o processamento da mensagem. Desta forma, a aplicação conseguirá remover as mensagens 
+do socket de forma rápida. 
+
+Como se trata de um servidor streaming, o usuário não poderá simular 
+REQUEST/RESPONSE, ou seja, o usuário não pode ficar solicitando informações a todo o 
+momento para o servidor. O usuário deverá assinar os ativos que deseja receber os dados, e o 
+servidor irá enviar todas as informações à medida que ele for sofrendo alterações. 
+
+
+
+ 
+
+ Comandos  
+ 
+
+ SQT – Subscribe Quote  
+ 
+
+Utilizado para solicitar o recebimento das negociações realizadas sobre um determinado 
+ativo. Caso o parâmetro „N‟ seja passado o usuário não será adicionado à lista de 
+monitoramento do ativo, visualizando apenas o snapshot do ativo. 
+
+ 
+- Sintaxe 
+
+SQT <ativo> 
+
+SQT <ativo> N 
+
+- Mensagens 
+
+As mensagens recebidas decorrentes da utilização deste comando seguem o seguinte 
+formato: 
+
+- Cabeçalho funcional: “T:<ativo>:<hora>” 
+
+- Corpo da mensagem: Este é composto de um ou mais pares de informação que é enviada 
+da seguinte forma: “:<índice>:<valor>” e finaliza com o caractere “!”. 
+
+ 
+Os índices possuem a seguinte correspondência: 
+
+ 
+Índice Significado Tipo 
+
+0 Horário da ultima modificação Horário (HHMMSS) 
+1 Data da última modificação Data (YYYYMMDD) 
+2 Preço do último negócio Float 
+3 Melhor oferta de compra Float 
+4 Melhor oferta de venda Float 
+5 Horário do último negócio Horário (HHMMSS) 
+6 Quantidade do negócio atual Inteiro (quantidade) 
+7 Quantidade do último negócio Inteiro (quantidade) 
+8 Quantidade de negócios realizados Inteiro 
+9 Volume acumulado dos negócios Inteiro (quantidade) 
+
+10 Volume financeiro dos negócios Float 
+11 Maior preço do dia Float 
+12 Menor preço do dia Float 
+13 Preço de fechamento do dia anterior Float 
+14 Preço de abertura Float 
+15 Horário da melhor oferta de compra Horário (HHMMSS) 
+16 Horário da melhor oferta de venda Horário (HHMMSS) 
+17 Volume acumulado das melhores ofertas de compra Float 
+18 Volume acumulado das melhores ofertas de venda Float 
+19 Volume da melhor oferta de compra Inteiro (quantidade) 
+20 Volume da melhor oferta de venda Inteiro (quantidade) 
+21 Variação Float 
+36 Preço de fechamento da última semana Float 
+37 Preço de fechamento do último mês Float 
+38 Preço de fechamento do último ano Float 
+39 Preço de abertura do dia anterior Float 
+40 Maior preço do dia anterior Float 
+41 Menor preço do dia anterior Float 
+42 Média Float 
+43 VHDaily Float 
+
+
+
+ 
+
+   
+ Código do Mercado:  
+ 1 = Bovespa  
+ 2 = Dow Jones  
+ 3 = BM&F  
+ 4 = Índices  
+ 5 = Money  
+
+7 = Forex 
+  
+
+8 = Indicators 
+44 Inteiro 
+
+10 = Nyse 
+12 = Nasdaq 
+13 = CFD 
+30 = Bitcoin 
+44 = Datagro 
+45 = INews 
+52 = Amex 
+64 = Tesouro direto 
+
+ Código do tipo do ativo:  
+ 1 = Ativo à vista  
+ 2 = Opção  
+ 3 = Índice  
+ 4 = Commodity  
+ 5 = Moeda  
+ 6 = Termo  
+ 7 = Futuro  
+ 8 = Leilão  
+
+9 = Bônus 
+  
+
+10 = Fracionário 
+45 Inteiro 
+
+11 = Exercício de opção 
+12 = Indicador 
+13 = ETF 
+15 = Volume 
+16 = Opção sobre a vista 
+17 = Opção sobre futuro 
+18 = Ativo de teste 
+19 = Estratégia 
+20 = Corp 
+21 = SECLOAN (Aluguel BTB) 
+22 = Tesouro direto 
+
+46 Lote padrão Inteiro (quantidade) 
+String(10) Exemplos: 
+
+47 Descrição do ativo DOL, INDICE 
+BOVESPA. 
+
+48 Nome de classificação String 
+49 Forma de cotação Inteiro 
+
+Data e Horário 
+50 Intraday Date (FORCES) 
+
+(YYYYMMDDHHMMSS) 
+Data e Horário 
+
+51 LastTrade Date (FORCES) 
+(YYYYMMDDHHMMSS) 
+
+52 Descrição abreviada do ativo String 
+53 Identificador do negocio cancelado String 
+54 Data do último negócio Data (YYYYMMDD) 
+
+Caracter: 
+  
+
+A = Compra 
+56 Sentido das ofertas não atendidas ao preço de abertura 
+
+V = Venda 
+0 = Não informado 
+
+57 Quantidade não atendida ao preço de abertura Inteiro 
+
+
+
+ 
+
+   
+58 Horário programado para abertura do papel Horário (HHMMSS) 
+
+59 Horário reprogramado para abertura do papel Horário (HHMMSS) 
+
+60 Código da corretora que fez a melhor oferta de compra Inteiro 
+61 Código da corretora que fez a melhor oferta de venda Inteiro 
+62 Código da corretora que realizou a última compra Inteiro 
+63 Código da corretora que realizou a última venda Inteiro 
+64 Data do vencimento (Mercado de opções) Data (YYYYMMDD) 
+65 Expirado Inteiro 
+66 Número total de papéis String 
+
+ Status do instrumento:  
+101 = Normal  
+
+ 
+102 = Leilão 
+
+67  
+105 = Suspenso 
+
+Inteiro 
+118 = Congelado 
+-1 = Vazio (apenas para internacionais) 
+
+Tipo da opção: 
+  
+
+A = Americana 
+72 Char 
+
+E = Europeia 
+0 = não existe 
+
+Direção da opção: 
+74 P = venda Char 
+
+C = compra 
+81 Símbolo do ativo pai (para opções) String 
+82 Preço teórico de abertura Float 
+83 Quantidade teórica Inteiro 
+
+ Status do ativo  
+0 = Normal  
+
+ 
+1 = Congelado 
+
+84  
+2 = Suspenso 
+
+Inteiro 
+3 = Leilão 
+4 = Inibido 
+
+85 Preço de Exercício Float 
+86 Diff (Preço Atual - Previous) Float 
+87 Data do Previous Data (YYYYMMDD) 
+
+ Fase do grupo do ativo:  
+ P = Pré-abertura  
+ A = Abertura (sessão normal)  
+
+PN = Pré-fechamento  
+ N = Fechamento 
+
+88 E = Pré-abertura do after  
+R = Abertura After String 
+NE = Fechamento do after 
+F = Final 
+NO = Fechado 
+T = Pausado 
+
+89 Média do dia anterior Float 
+90 Intervalo de Margem (mercado BTC) Float 
+94 Volume médio nos últimos 20 dias Float 
+95 Market Capitalization Float 
+
+Tipo de Mercado: 
+  
+
+RT = RealTime 
+96 String 
+
+D = Delay 
+EOD = End of Day) 
+
+97 Variação do fechamento em uma semana Float 
+98 Variação do fechamento em um mês Float 
+99 Variação do fechamento em um ano Float 
+
+
+
+ 
+
+100 Quantidade de contratos abertos Inteiro 
+101 Número dias úteis até o vencimento Inteiro 
+102 Número dias para o vencimento Inteiro 
+103 Ajuste do dia Float 
+104 Ajuste do dia anterior Float 
+105 SecurityId (BMF FIX) String 
+
+String(2) Valores 
+106 TickDirection (BMF FIX) 
+
+possíveis: +, 0+, -, 0-. 
+107 TunnelUpperLimit Float 
+108 TunnelLowerLimit Float 
+109 TradingPhase (BMF FIX) String(2) 
+110 TickSize Inteiro 
+
+111 Volume mínimo de negociação do instrumento Inteiro (quantidade) 
+
+112 Intervalo mínimo para incrementos de preço Float 
+113 Quantidade mínima para o instrumento em uma oferta Inteiro (quantidade) 
+114 Quantidade máxima para o instrumento em uma oferta Inteiro (quantidade) 
+115 Número único de identificação do instrumento Inteiro 
+
+String Exemplos: BRL, 
+116 Moeda utilizada no preço 
+
+EUR, USD. 
+String(32) 
+
+  
+Valores possíveis: FUT, 
+
+117 SecurityType 
+OPT, SPOT, SOPT, 
+
+FOPT, DTERM. 
+Inteiro Exemplos: 
+
+ 
+Código de negociação do instrumento (Security Sub 1003 - ON, 1107 - Non 
+
+118 
+Type) tradable Index, 1124 - 
+
+Fixed Income ETF 
+119 Produto associado ao instrumento Inteiro 
+120 Mês e ano de vencimento Data (YYYYMM) 
+121 Preço de exercício da opção Float 
+
+String Exemplos: BRL, 
+122 Moeda do preço de exercício da opção 
+
+EUR, USD. 
+123 Multiplicador do contrato Float 
+124 Código que representa o tipo de preço do instrumento Inteiro 
+
+Horário em que um instrumento não é mais passível de Data e Horário 
+125 
+
+negociação (YYYYMMDDHHMMSS) 
+126 Indica o grupo ao qual o ativo pertence String(15) 
+127 Ajuste atual em taxa Float 
+128 Ajuste anterior em taxa Float 
+129 Data do Ajuste atual em taxa Data(YYYYMMDD) 
+130 Número de saques até data de vencimento Inteiro 
+
+Variação do volume da hora com base na média do 
+134 Float 
+
+volume do horário nos últimos 20 dias 
+Variação do volume até a hora com base na média do 
+
+135 Float 
+volume até o horário nos últimos 20 dias 
+
+136 Código do setor do Ativo Inteiro 
+137 Código do subsetor do Ativo Inteiro 
+138 Código do segmento do Ativo Inteiro 
+139 Tipo do ajuste atual em taxa String 
+140 Preço de referência Double 
+141 Data do preço de referência String 
+
+Horário 
+142 Horário da ultima modificação 
+
+(HHMMSSmmm) 
+Horário 
+
+143 Horário do último negócio 
+(HHMMSSmmm) 
+
+Horário 
+144 Horário da melhor oferta de compra 
+
+(HHMMSSmmm) 
+
+
+
+ 
+
+Horário 
+145 Horário da melhor oferta de venda 
+
+(HHMMSSmmm) 
+146 Variação utilizando o ajuste do dia anterior Float 
+147 Diff (Preço Atual - Ajuste do dia anterior) Float 
+148 Tunnel Upper Auction Limit Double 
+149 Tunnel Lower Auction Limit Double 
+150 Tunnel Upper Rejection Limit Double 
+151 Tunnel Lower Rejection Limit Double 
+152 Tunnel Upper Static Limit Double 
+153 Tunnel Lower Static Limit Double 
+
+Os campos abaixo são exclusivos do mercado Tesouro Direto: 
+ 
+
+200 Preço unitário Float 
+201 Valor da taxa (Rentabilidade) Float 
+202 Valor mínimo de aplicação Float 
+203 Mercado Inteiro 
+204 Código do titulo String 
+205 Código do tipo Inteiro 
+206 Nome do tipo String 
+207 Selic String 
+208 Data de emissão Data (YYYYMMDD) 
+209 Negocio Inteiro 
+210 Valor base Float 
+211 Valor da taxa de compra Float 
+212 Valor da taxa de venda Float 
+213 Código indexador Inteiro 
+214 Nome indexador String 
+215 Nome do titulo String 
+
+ 
+- Exemplos 
+
+> SQT petr4 
+ 
+
+T:PETR4:101758:1:20070926:2:59.95:3:59.93:4:59.96:5:101757:6:0:7:800:8:361:9:354 
+600:10:21211962:11:59.97:12:59.51:13:59.110:14:59.51:15:101700:16:101700:17:500: 
+18:1800:19:500:20:1800:36:54.32:37:52.11:38:49.26:39:59.49:40:59.60:41:58.74:42: 
+59.82:43:29.9530673089134:44:1:45:1:46:100:47:PETROBRAS:52:0:50:200709201400 
+06:51:20070820135200:60:39:61:72:62:40:63:30:64:00000000:65:0:82:59.51:83:37600: 
+84:0:49:1! 
+T:PETR4:155613:3:43.01:19:2000:60:239:17:4000! 
+T:PETR4:155613:4:43.02:20:4700:61:110:18:4700:16:155600! 
+
+ 
+ USQ – Unsubscribe Quote  
+
+ 
+Utilizado para cancelar o recebimento das negociações realizadas sobre um determinado ativo. 
+
+- Sintaxe 
+USQ <ativo> 
+
+- Exemplo 
+> USQ petr4 
+
+
+
+ 
+
+ BQT – Subscribe Book Quote  
+
+ 
+Utilizado para solicitar o recebimento do livro de ofertas de um determinado ativo. 
+
+- Sintaxe 
+BQT <ativo> 
+
+- Mensagens 
+As mensagens recebidas decorrentes da utilização deste comando seguem o seguinte 
+
+formato. 
+
+- Cabeçalho funcional: “B:<ativo>:” 
+
+- Corpo da mensagem 
+ 
+
+Tipo da mensagem Mensagem 
+A:<posição>:<direção>:<preço>:<quantidade>:<corretora>:<data/hor 
+
+Adição de ofertas 
+a>:<OrderID>:<tipo da oferta> 
+
+Atualização de U:<posição nova>:<posição antiga>:<direção>:<preço>:<quantida 
+ofertas de>:<corretora>:<data/hora>:<OrderID>:<tipo da oferta> 
+Fim das mensagens 
+
+E 
+iniciais 
+Cancelamento de 
+
+D:<tipo>:<direção>:<posição> 
+ofertas 
+
+- Significado dos Campos: 
+ 
+
+Identificador Significado Tipo 
+<posição> Posição da oferta no livro de ofertas Inteiro 
+
+Direção da oferta. As direções podem ser: oferta de 
+<direção> Caracter 
+
+compra (A) ou oferta de venda (V) 
+<preço> Preço da oferta Float 
+<quantidade> Quantidade da oferta Inteiro 
+
+Código de identificação da corretora detentora da 
+<corretora> Inteiro 
+
+oferta 
+
+  Data e Horário 
+<data/hora> Data e hora da oferta (DDMMHHMM) 
+
+<posição nova> Nova posição da oferta no livro de ofertas Inteiro 
+
+<posição 
+Posição que a oferta ocupava antes da atualização Inteiro 
+
+antiga> 
+ Identifica o tipo de cancelamento de ofertas que deve  
+ ser feito. O tipo 1 indica que somente a oferta da  
+
+posição indicada deve ser cancelada. O tipo 2 indica 
+ que todas as ofertas melhores do que a oferta  
+<tipo> indicada pela posição, inclusive ela, devem ser Inteiro 
+
+canceladas. O tipo 3 indica que todas as ofertas, tanto 
+de compra quanto de venda, devem ser canceladas. 
+Neste tipo a mensagem não vem acompanhada de 
+direção e posição. 
+
+<OrderID> Identificador da ordem, único para instrumento no dia. String 
+Identifica o tipo da oferta: 
+
+<tipo da oferta> L = Indica oferta Limitada Char 
+O = Oferta ao preço de Abertura 
+
+
+
+ 
+
+- Exemplo 
+> BQT petr4 
+
+ 
+B:PETR4:A:0:A:99.99:100:131:11041005 
+B:PETR4:U:1:0:A:99.98:500:37:11041130 
+B:PETR4:D:1:V:4 
+B:PETR4:D:2:A:2 
+B:PETR4:D:3 
+
+ 
+ UBQ – Unsubscribe Book Quote  
+
+ 
+Utilizado para cancelar o recebimento do livro de ofertas de um determinado ativo 
+
+ 
+- Sintaxe 
+
+UBQ <ativo> 
+ 
+
+- Exemplo 
+
+> UBQ petr4 
+ 
+ 
+
+GPN – Get Player Names 
+ 
+ 
+
+Utilizado para requisitar o nome e o código das corretoras em um determinado mercado. 
+Ao final da lista de corretoras é enviada uma mensagem com a letra “E” no lugar do código da 
+corretora. 
+
+- Sintaxe 
+
+gpn <Nome do Mercado > <Parâmetro Opcional> 
+ 
+
+- Lista de parâmetros opcionais: 
+ 
+
+1 – Retorna as corretoras ordenadas por nome 
+Por Padrão – Retorna as corretoras ordenadas pelo código no mercado (ordenação em formato 
+string) 
+
+- Mensagens 
+ 
+
+As mensagens recebidas decorrentes da utilização deste comando seguem o seguinte 
+formato. 
+
+ 
+> Cabeçalho funcional: “G:<Nome do Mercado>” 
+
+> Corpo da mensagem 
+ 
+
+Tipo da mensagem Mensagem 
+Requisição do nome e 
+
+:<código da corretora no mercado>:<nome da 
+código das corretoras 
+
+corretora>: <código da corretora no banco>:<código do 
+
+mercado> 
+
+ 
+- Exemplo 
+
+> gpn bmf 
+
+
+
+ 
+
+G:BMF:1:MAGLIANO:160:3 
+G:BMF:10:SPINELLI:180:3 
+G:BMF:11:FINABANK:147:3 
+G:BMF:110:SLW:176:3 G:BMF:114:ITAU:157:3 
+
+G: BMF:E 
+
+
+
+ 
+
+ GNA – Get News Agency  
+ 
+
+Utilizado para recupera as agências de notícias existentes 
+
+- Sintaxe 
+GNA 
+
+- Mensagens 
+As mensagens recebidas decorrentes da utilização deste comando seguem o seguinte 
+
+formato: 
+
+- Cabeçalho funcional: “GNA:” 
+ 
+
+- Corpo da mensagem 
+ 
+
+Tipo da mensagem Mensagem 
+Listagem das <símbolo>:<tipo>:<código>:<descrição>:<tipo agência>:<cor> 
+informações 
+Fim da lista END 
+
+- Significado dos Campos: 
+ 
+
+Identificador Significado 
+<símbolo> Símbolo da agência 
+
+C = Agência privada 
+<tipo> 
+
+O = Agência pública 
+<código> Código da agência 
+<descrição> Descrição da agência 
+
+1 = Agência de Notícias 
+<tipo agência> 
+
+2 = Agência de Análise 
+<cor> Código da cor da agência 
+
+- Exemplo 
+> GNA 
+
+ 
+GNA:BMF:O:4:BMF News 
+GNA:BOV:O:3:Bovespa News 
+GNA:BRNEW:O:7:Agência Brasil 
+GNA:CAPI:O:19:CMCapital News 
+
+
+
+ 
+
+ NEM – News  
+ 
+
+Utilizado para solicitar o recebimento de notícias. 
+
+- Sintaxe 
+>Subscribe: 
+
+NEM A <agência> 
+
+>Últimas notícias: 
+NEM L <identificação da requisição> <quantidade> <agencia> <palavra chave> 
+
+>Requisição do corpo de uma notícia: 
+NEM N <identificação da requisição> <agência> <código> 
+
+- Mensagens 
+As mensagens recebidas decorrentes da utilização deste comando seguem o seguinte 
+
+formato. 
+
+- Cabeçalho funcional: “O:” 
+ 
+
+- Corpo da mensagem: 
+ 
+
+Tipo da mensagem Mensagem 
+A:<agência>:<codigo>:<data>:<horário>:<categoria>:<tamanho do 
+
+Subscribe 
+titulo>:<titulo> 
+L:<identificação da requisição>:<agencia>:<código>: 
+
+Últimas notícias 
+<data>:<horário>:<categoria>:<tamanho do titulo>:<titulo> 
+
+ N:<identificação da requisição>:<agência>:<código>:<corpo> 
+ 
+
+ 
+Obs: no corpo da notícia o “LineBreak” (caracteres 013 010 CRLF) 
+
+Requisição do corpo 
+será substituído pelo caractere 003(ETX). 
+
+de uma notícia 
+
+Se o código da noticia não for encontrado no banco de dados, será 
+retornado o erro 16. 
+
+Fim da lista de 
+<tipo do comando>:<identificação da requisição>:END 
+
+notícias 
+
+- Exemplos 
+
+> NEM a bov 
+O:A:BOV:1565281:20090617:134432:1:46:LEILAO DE IBOVT40 (OPV IBOV AGO/40.000) 
+ATE 13 
+
+ 
+> NEM l 123 10 
+O:L:123:BOV:1565287:20090617:134715:1:62:17:06-OFERTAS DISPONIVEIS NO 
+BANCO DE TITULOS CBLC-BTC-4 13:46 
+O:L:123:BOV:1565286:20090617:134653:1:62:17:06-OFERTAS DISPONIVEIS NO 
+BANCO DE TITULOS CBLC-BTC-3 13:46 
+O:L:123:BOV:1565285:20090617:134636:1:62:17:06-OFERTAS DISPONIVEIS NO 
+BANCO DE TITULOS CBLC-BTC-2 13:45 
+O:L:123:BOV:1565284:20090617:134618:1:62:17:06-OFERTAS DISPONIVEIS NO 
+BANCO DE TITULOS CBLC-BTC-1 13:45 
+O:L:123:END 
+
+> NEM n 123 cfn 2221941 
+O:N:123:CFN:2221941:Mineradores Mamani e Peña recebem alta do hospital no Chile 
+
+
+
+ 
+
+ UNE – Unsubscribe News  
+ 
+
+Utilizado para parar o recebimento de notícias. 
+- Sintaxe 
+
+UNE <agencia> 
+
+- Significado dos Campos 
+ 
+
+Identificador Significado 
+<agencia> Símbolo da agência 
+
+
+
+ 
+
+ SAB – Subscribe Aggregated Book  
+ 
+
+Utilizado para solicitar o recebimento do livro agregado de ofertas de um determinado 
+ativo. 
+
+- Sintaxe 
+SAB <ativo> [N] 
+
+- Mensagens 
+As mensagens recebidas decorrentes da utilização deste comando seguem o seguinte 
+
+formato. 
+
+- Cabeçalho funcional: “Z:<ativo>:” 
+ 
+
+- Corpo da mensagem 
+ 
+
+Tipo da mensagem Mensagem 
+A:<posição>:<direção>:<preço>:<quantidade>:<número de 
+
+Adição de ofertas 
+ofertas>:<data/hora> 
+
+Atualização de U:<posição>:<direção>:<preço>:<quantidade>:<número de 
+ofertas ofertas >:<data/hora> 
+Fim das mensagens 
+
+E 
+iniciais 
+Cancelamento de 
+
+D:<tipo>:<direção>:<posição> 
+ofertas 
+
+- Significado dos Campos 
+ 
+
+Identificador Significado Tipo 
+<posição> Posição da oferta no livro de ofertas. Inicia em zero. Inteiro 
+
+Direção da oferta. As direções podem ser: oferta de 
+<direção> Caracter 
+
+compra (A) ou oferta de venda (V). 
+<preço> Preço da oferta. Float 
+<quantidade> Quantidade da oferta. Inteiro 
+<número de 
+
+Número de ofertas agregadas. Inteiro 
+ofertas> 
+
+Data e Horário 
+<data/hora> Data e hora da oferta. 
+
+(DDMMHHMM) 
+
+<posição> Posição da oferta no livro. Inteiro 
+
+ Identifica o tipo de cancelamento de ofertas que deve  
+ser feito. O tipo 1 indica que somente a oferta da 
+
+ posição indicada deve ser cancelada. O tipo 3 indica  
+<tipo> que todas as ofertas, tanto de compra quanto de Inteiro 
+
+venda, devem ser canceladas. Neste tipo a 
+mensagem não vem acompanhada de direção e 
+posição. 
+
+ 
+
+ 
+- Exemplos 
+
+> SAB petr4 
+ 
+
+Z:PETR4:D:3 
+Z:PETR4:A:0:A:32.580:200:1:08040214 
+Z:PETR4:A:1:A:32.550:100:1:08040214 
+Z:PETR4:A:2:A:32.530:100:1:08040214 
+Z:PETR4:A:3:A:32.500:1000:3:08040214 
+Z:PETR4:A:4:A:32.310:2000:1:08040214 
+Z:PETR4:A:0:V:32.600:3200:9:08040214 
+
+
+
+ 
+
+ 
+Z:PETR4:A:1:V:32.620:600:1:08040214 
+Z:PETR4:A:2:V:32.640:300:1:08040214 
+Z:PETR4:A:3:V:32.650:1700:4:08040214 
+Z:PETR4:A:4:V:32.660:400:1:08040214 
+Z:PETR4:E 
+
+ 
+ UAB – Unsubscribe Aggregated Book  
+
+ 
+Utilizado para parar o recebimento do livro agregado de ofertas de um determinado ativo. 
+
+- Sintaxe 
+UAB <ativo> 
+
+
+
+ 
+
+ GQT – Get Quote Trade  
+
+ 
+Utilizado para solicitar o recebimento dos negócios realizados no dia para um determinado 
+ativo. 
+
+- Sintaxe 
+- Subscribe 
+
+GQT <ativo> S [<quantidade negócios>] [<identificador do negócio>] [<ASC> 
+ou <DESC>] [<C>] 
+
+Obs: para solicitar por <identificador do negócio> deve-se especificar a 
+<quantidade negócios> 
+Obs: para solicitar <ASC> ou <DESC> e <C> deve-se especificar o 
+<identificador do negócio> 
+Obs: O opera como um operador > (maior que), retornando apenas os negócios 
+seguintes, exemplos: Se enviar 0, serão retornados os negócios 10, 20, 30, ... Se 
+enviar 10, serão retornados os negócios 20, 30, ... 
+
+- Snapshot 
+GQT <ativo> N <quantidade negócios> <offset> <identificador requisição> 
+
+[<ASC> ou <DESC>] [<C>] 
+Obs: para solicitar <ASC> ou <DESC> e <C> deve-se especificar o 
+<identificador requisição> 
+
+- Significado dos Campos: 
+ 
+
+Identificador Significado 
+<ativo> Símbolo do ativo 
+<quantidade 
+
+Quantidade de negócios que devem ser recuperados 
+negócios> 
+<identificador do 
+
+Identificador único do negócio 
+negócio> 
+<identificador 
+
+Identificador único de requisição 
+requisição> 
+<ASC> ou <DESC> Ordenação do SNAPSHOT 
+<C> Indica que o SNAPSHOT será retornado compactado 
+
+- Mensagens 
+As mensagens recebidas decorrentes da utilização deste comando seguem o seguinte 
+
+formato. 
+
+- Cabeçalho funcional: “V:<ativo>:” 
+ 
+
+- Corpo da mensagem 
+ 
+
+Tipo da mensagem Mensagem 
+<operação>:<horário do negócio>:<preço>:<corretora 
+
+Negócio comprou>:<corretora vendeu>:<quantidade>:<identificador do 
+(subscribe) negócio>:<condição do trade>:<agressor>:<condição do trade 
+
+original> 
+<operação>:<horário do negócio>:<preço>:<corretora 
+
+Negócio comprou>:<corretora vendeu>:<quantidade>:<identificador do 
+(snapshot) negócio>:<identificador requisição>:<condição do 
+
+trade>>:<agressor>:<condição do trade original> 
+Remoção Negócio <operação>:<identificador do negócio> 
+Remoção de todos 
+
+<operação> 
+negócios 
+Fim das mensagens E 
+Fim das mensagens 
+
+E:<identificador requisição> 
+(snapshot) 
+
+
+
+ 
+
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+
+ 
+- Significado dos Campos: 
+
+ 
+Identificador Significado 
+
+<ativo> Símbolo do ativo 
+<horário do negócio> Horário que o negócio ocorreu 
+<preço> Preço do negócio 
+<corretora comprou> Identificador da corretora que efetuou a compra 
+<corretora vendeu> Identificador da corretora que efetuou a venda 
+<quantidade> Quantidade do negócio 
+
+Operação que foi realizada 
+ 
+
+A = Adição de negócio 
+<operação> 
+
+D = Remoção de negócio 
+R = Remoção de todos os negócios 
+
+<identificador do 
+Identificador único do negócio 
+
+negócio> 
+<identificador Identificador único de requisição 
+requisição> 
+
+ 0 = Não Direto 
+1 = Direto 
+
+ 2 = RLP 
+<condição do trade> 3 = RFQ 
+
+4 = MIDPOINT TRADE 
+5 = OPENING PRICE (leilão) 
+6 = POINT IN TIME AUCTION 
+I = Indefinido 
+
+<agressor> A = Comprador 
+V = Vendedor 
+
+ Lista delimitada por espaços: 
+  
+ 0 = Default (No condition) 
+ R = Opening Price 
+ X = Crossed 
+ L = Last Trade at the Same Price Indicator 
+ P = Imbalance more buyers 
+
+Q = Imbalance more sellers 
+ U = Exchange Last 
+<condição do trade 3 = Multi Asset Trade (Termo Vista) 
+original> 1 = Leg trade 
+
+2 = Marketplace entered trade (trade on behalf) 
+IM = Implied 
+PT = Block Book Trade 
+RF= Equities : RFQ Trade 
+RL = RLP Trade 
+MP = Midpoint Trade 
+TC = Trade at Close 
+TA = Trade at Average 
+SW = Sweep 
+
+- Exemplos 
+
+> GQT PETR4 N 2 50 XXX 
+> GQT PETR4 N 2 50 XXX DESC C 
+> GQT PETR4 N 2 50 XXX C 
+> GQT PETR4 S 
+> GQT PETR4 S 10 
+> GQT DI1F11 S 10 2020 
+> GQT PETR4 S 10 10 DESC 
+> GQT PETR4 S 10 10 DESC C 
+> GQT PETR4 S 10 10 C 
+
+
+
+ 
+
+ UQT – Unsubscribe Quote Trade  
+ 
+
+Utilizado para cancelar o recebimento dos negócios realizados no dia para um 
+determinado ativo. 
+
+- Sintaxe 
+UQT <Símbolo do ativo> 
+
+- Exemplo 
+> UQT PETR4 
+
+
+
+ 
+
+ 
+ VAP – Volume at Price  
+
+ 
+Utilizado para apontamento de volume negociado por um ativo em determinado valor. 
+
+- Sintaxe 
+VAP <ativo> [<período>] 
+VAP <ativo> <h> <data inicio> [<data fim>] [<acc>] 
+
+- Significado dos campos 
+ 
+
+Tipo da 
+Mensagem Tipo 
+
+mensagem 
+<ativo> Nome do ativo negociado String 
+
+<período> Período em minutos considerado. Ex: últimos 5 minutos Integer 
+
+- Mensagens 
+As mensagens recebidas decorrentes da utilização deste comando seguem o seguinte 
+
+formato: 
+
+- Cabeçalho funcional: “VAP:” 
+ 
+
+- Corpo da mensagem: 
+ 
+
+Tipo da mensagem Mensagem 
+<ativo>:<preço negociado>:<quantidade negócios 
+
+ comprador>:<volume comprador>:<quantidade negócios 
+Mensagem vendedor>:<volume vendedor>:<quantidade negócios 
+
+direto>:<volume direto>:<quantidade negócios indefinido>:<volume 
+indefinido>:<quantidade negócios RLP>:<volume RLP> 
+<ativo>:<preço negociado>:<quantidade negócios 
+
+ comprador>:<volume comprador>:<quantidade negócios 
+Mensagem período vendedor>:<volume vendedor>:<quantidade negócios 
+
+direto>:<volume direto>:<quantidade negócios indefinido>:<volume 
+indefinido>:<período>:<quantidade negócios RLP>:<volume RLP> 
+
+Fim das mensagens <ativo>:E 
+Fim das mensagens 
+
+<ativo>:E:<período> 
+Período 
+
+- Significado dos Campos 
+ 
+
+Identificador Significado Tipo 
+<ativo> Nome do ativo negociado String 
+<preço 
+
+Valor em que o ativo foi negociado Float 
+negociado> 
+<quantidade 
+
+Quantidade de negócios realizados cujo lado agressor é 
+negócios Float 
+
+o comprador 
+comprador > 
+<volume Volume acumulado dos negócios realizados cujo lado 
+
+Float 
+comprador > agressor é o comprador 
+<quantidade 
+
+Quantidade de negócios realizados cujo lado agressor é 
+negócios Float 
+
+o vendedor 
+vendedor > 
+<volume Volume acumulado dos negócios realizados cujo lado 
+
+Float 
+vendedor > agressor é o vendedor 
+<quantidade 
+negócios Quantidade de negócios realizados direto Float 
+direto> 
+
+
+
+ 
+
+<volume direto> Volume acumulado dos negócios realizados direto Float 
+
+<quantidade 
+Quantidade de negócios realizados cujo lado agressor é 
+
+negócios Float 
+indefinido 
+
+indefinido> 
+
+<volume Volume acumulado dos negócios realizados cujo lado 
+Float 
+
+indefinido > agressor é indefinido 
+
+<quantidade 
+Quantidade de negócios realizados RLP Float 
+
+negócios RLP > 
+
+<volume RLP > Volume acumulado dos negócios RLP realizados Float 
+
+- Exemplo 
+> VAP petr4 
+
+
+
+ 
+
+ GTC – Get Time Crystal  
+ 
+
+Utilizado para solicitar o horário corrente do Difusor. 
+
+- Sintaxe 
+GTC 
+
+- Mensagens 
+As mensagens recebidas decorrentes da utilização deste comando seguem o seguinte 
+
+formato. 
+
+- Corpo da mensagem: “GTC:<data><hora>” 
+ 
+
+- Significado dos Campos 
+ 
+
+Identificador Significado 
+<data> Data que o aviso foi criado, formato: YYYYMMDD 
+<hora> Hora que o aviso foi criado, formato: HHMMSS 
+
+- Exemplo 
+> GTC 
+
+GTC:20170308145946 
+
+
+
+ 
+
+ QUIT  
+
+ 
+Utilizado para encerrar a conexão com o sistema. 
+
+- Sintaxe 
+QUIT 
+
+- Exemplo 
+> QUIT 
+
+
+
+ 
+
+ Mensagens de Erro  
+ 
+
+ Erro 001 – comando inválido  
+ 
+
+Mensagem enviada quando o comando solicitado não faz parte do conjunto de 
+comandos disponíveis no sistema. 
+
+- Sintaxe 
+E:1:<Comando> 
+
+ Erro 002 – objeto não encontrado  
+ 
+
+Mensagem enviada quando o ativo solicitado não existe ou não está ativo no sistema. 
+ 
+
+- Sintaxe 
+E:2:<Comando>:<Objeto>:<Complemento> 
+
+ Erro 003 – sem permissão  
+ 
+
+Mensagem enviada quando o usuário não possui permissão para o serviço solicitado. 
+
+- Sintaxe 
+E:3:<Comando>:<Objeto>:<Complemento> 
+
+- Exemplo: 
+Receber informações sobre um ativo ou agência de notícias solicitada. 
+
+ Erro 004 – algum parâmetro vazio  
+ 
+
+Mensagem enviada quando a mensagem de solicitação foi considerada inválida, por 
+parâmetro vazio. 
+
+ 
+- Sintaxe 
+
+E:4:<Comando> 
+
+ Erro 005 – não há parâmetros  
+ 
+
+Mensagem enviada quando a mensagem de solicitação foi considerada inválida, por 
+falta de parâmetros, o comando ainda não foi analisado. 
+
+ 
+- Sintaxe 
+
+E:5:<Comando> 
+
+ Erro 006  
+ 
+
+Mensagem enviada à primeira conexão quando uma segunda conexão foi aberta com o 
+mesmo nome de usuário com permissão única em um mesmo servidor, após a mensagem a 
+primeira conexão é fechada. 
+
+ 
+- Sintaxe 
+
+E:6 
+
+
+
+ 
+
+ Erro 007  
+ 
+
+Mensagem enviada quando ocorreu um evento onde o usuário não tem mais acesso ao 
+sistema porém a conexão ainda permanece ativa. 
+
+ 
+- Sintaxe 
+
+E:7 
+
+ Erro 008  
+ 
+
+Mensagem enviada à primeira conexão quando uma segunda conexão foi aberta com o 
+mesmo nome de usuário em outro servidor de mesmo modo de operação, após a mensagem 
+a primeira conexão é fechada. 
+
+ 
+- Sintaxe 
+
+E:8 
+
+ 
+ Erro 009  
+
+ 
+Mensagem enviada quando o usuário perdeu as permissões que garantiam a sua 
+
+permanência no sistema. 
+ 
+
+- Sintaxe 
+E:9 
+
+ Erro 010 – parâmetro inválido  
+ 
+
+Mensagem enviada quando um comando válido foi solicitado, porém contém pelo 
+menos um parâmetro incorreto. 
+
+ 
+- Sintaxe 
+
+E:10 
+
+ Erro 011  
+ 
+
+Mensagem enviada quando o servidor está indisponível para novas conexões de 
+clientes. 
+
+ 
+- Sintaxe 
+
+E:11:Server unavailable 
+
+ Erro 012  
+ 
+
+Mensagem enviada quando o servidor ficará indisponível, então é feito o envio do novo 
+host para qual o cliente deve ir, após essa mensagem o cliente é desconectado. 
+
+ 
+- Sintaxe 
+
+E:12:<Host> 
+
+
+
+ 
+
+ Erro 013 – Suid invalid  
+
+Mensagem enviada quando o comando SUID está incorreto. 
+
+- Sintaxe 
+E:13:SUID INVALID FORMAT 
+
+ Erro 014 – Request Id too large  
+ 
+
+Mensagem enviada quando o id usado excede o máximo de 14 caracteres. 
+ 
+
+- Sintaxe 
+E:14: REQUEST ID TOO LARGE 
+
+ 
+ Erro 015 – Database Error  
+
+ 
+Mensagem enviada quando ocorre um erro de banco de dados. 
+
+ 
+- Sintaxe 
+
+E:15:DATABASE ERROR 
+
+ Erro 016 – News Not Found  
+ 
+
+Mensagem enviada quando não encontrou no banco de dados o código da notícia 
+requisitada. 
+
+ 
+- Sintaxe 
+
+E:16:<identificação da requisição> 
+
+ Erro 017 – Error Permission Service  
+
+Mensagem enviada quando o usuário envia comandos que não tem permissão. 
+
+- Sintaxe 
+E:17:<Comando> 
+
+ Erro 018 – Erro Quantity Quotes  
+
+Mensagem enviada quando o usuário tenta assinar mais ativos que permitido. 
+
+- Sintaxe 
+E:18:<Comando>

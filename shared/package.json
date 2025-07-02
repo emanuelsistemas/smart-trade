@@ -1,0 +1,14 @@
+{
+  "name": "@smart-trade/shared",
+  "version": "1.0.0",
+  "description": "Tipos compartilhados do sistema Smart-Trade",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch"
+  },
+  "devDependencies": {
+    "typescript": "^5.3.3"
+  }
+}

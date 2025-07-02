@@ -1,0 +1,29 @@
+{
+  "name": "smart-trade",
+  "version": "1.0.0",
+  "description": "Sistema de Trading com Order Flow e Footprint Chart",
+  "private": true,
+  "workspaces": [
+    "server",
+    "client", 
+    "shared"
+  ],
+  "scripts": {
+    "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\"",
+    "dev:server": "cd server && npm run dev",
+    "dev:client": "cd client && npm run dev",
+    "build": "npm run build:shared && npm run build:server && npm run build:client",
+    "build:server": "cd server && npm run build",
+    "build:client": "cd client && npm run build",
+    "build:shared": "cd shared && npm run build",
+    "test": "npm run test:server && npm run test:client",
+    "test:server": "cd server && npm test",
+    "test:client": "cd client && npm test",
+    "clean": "rm -rf server/dist client/dist shared/dist",
+    "setup": "npm install && npm run build:shared"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2",
+    "typescript": "^5.3.3"
+  }
+}
