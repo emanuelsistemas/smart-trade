@@ -30,6 +30,10 @@ export interface AppConfig {
     port: number;
     host: string;
     heartbeatInterval: number;
+    jwtSecret: string;
+    jwtExpiresIn: string;
+    maxConnections: number;
+    maxSessions: number;
   };
   
   // Logging
@@ -71,7 +75,11 @@ const defaultConfig: AppConfig = {
   websocket: {
     port: parseInt(process.env.WS_PORT || '3002'),
     host: process.env.WS_HOST || 'localhost',
-    heartbeatInterval: parseInt(process.env.WS_HEARTBEAT || '30000')
+    heartbeatInterval: parseInt(process.env.WS_HEARTBEAT || '30000'),
+    jwtSecret: process.env.JWT_SECRET || 'smart-trade-secret-key-change-in-production',
+    jwtExpiresIn: process.env.JWT_EXPIRES_IN || '24h',
+    maxConnections: parseInt(process.env.WS_MAX_CONNECTIONS || '100'),
+    maxSessions: parseInt(process.env.WS_MAX_SESSIONS || '3')
   },
   
   logging: {

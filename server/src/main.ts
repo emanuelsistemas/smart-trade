@@ -6,6 +6,9 @@ import { CedroErrorHandler } from './cedro/error-handler';
 import { TradingSQLiteManager } from './data/sqlite-manager';
 import { TradingRedisManager } from './data/redis-manager';
 import { DataFlowManager } from './data/data-flow-manager';
+import { TradingWebSocketServer } from './websocket/websocket-server';
+import { AuthManager } from './websocket/auth-manager';
+import { DataBroadcaster } from './websocket/data-broadcaster';
 import { config, getConfigSummary } from './utils/config';
 import { createLogger } from './utils/logger';
 
@@ -18,6 +21,9 @@ class SmartTradeServer {
   private sqliteManager: TradingSQLiteManager;
   private redisManager: TradingRedisManager;
   private dataFlowManager: DataFlowManager;
+  private wsServer: TradingWebSocketServer;
+  private authManager: AuthManager;
+  private dataBroadcaster: DataBroadcaster;
   private isRunning: boolean = false;
 
   constructor() {
@@ -41,6 +47,32 @@ class SmartTradeServer {
         batchSize: config.data.batchSize,
         batchInterval: 5000, // 5 segundos
         bufferSize: config.data.bufferSize
+      }
+    );
+
+    // Inicializar sistema WebSocket
+    this.authManager = new AuthManager({
+      jwtSecret: config.websocket.jwtSecret,
+      jwtExpiresIn: config.websocket.jwtExpiresIn,
+      maxSessions: config.websocket.maxSessions
+    });
+
+    this.wsServer = new TradingWebSocketServer({
+      port: config.websocket.port,
+      host: config.websocket.host,
+      jwtSecret: config.websocket.jwtSecret,
+      heartbeatInterval: config.websocket.heartbeatInterval,
+      maxConnections: config.websocket.maxConnections
+    });
+
+    this.dataBroadcaster = new DataBroadcaster(
+      this.wsServer,
+      this.authManager,
+      this.dataFlowManager,
+      {
+        throttleInterval: 100, // 100ms
+        maxQueueSize: 1000,
+        enableCompression: false
       }
     );
 
@@ -81,6 +113,32 @@ class SmartTradeServer {
 
     this.dataFlowManager.on('error', (error) => {
       logger.error('❌ Erro no sistema de dados:', error);
+    });
+
+    // Eventos do WebSocket Server
+    this.wsServer.on('clientConnected', (client) => {
+      logger.info('🔌 Cliente WebSocket conectado:', {
+        clientId: client.id,
+        ip: client.metadata.ip
+      });
+    });
+
+    this.wsServer.on('clientAuthenticated', (client) => {
+      logger.info('✅ Cliente WebSocket autenticado:', {
+        clientId: client.id,
+        userId: client.userId
+      });
+    });
+
+    this.wsServer.on('clientDisconnected', (client) => {
+      logger.info('❌ Cliente WebSocket desconectado:', {
+        clientId: client.id,
+        userId: client.userId
+      });
+    });
+
+    this.wsServer.on('error', (error) => {
+      logger.error('❌ Erro no WebSocket Server:', error);
     });
 
     // Eventos do gerenciador de subscrições
@@ -204,7 +262,7 @@ class SmartTradeServer {
       logger.error('❌ Erro ao processar dados de mercado:', error);
     }
 
-    // TODO: Na Fase 4, enviar via WebSocket para clientes
+    // Dados agora são enviados automaticamente via DataBroadcaster
   }
 
   async start(): Promise<void> {
@@ -218,16 +276,22 @@ class SmartTradeServer {
       await this.sqliteManager.initialize();
       await this.redisManager.connect();
 
+      // Inicializar WebSocket Server
+      logger.info('🌐 Iniciando WebSocket Server...');
+      await this.wsServer.start();
+
       // Conectar ao Cedro
       logger.info('🔌 Conectando à Cedro API...');
       await this.cedroClient.connect();
 
       logger.info('✅ Smart-Trade Server iniciado com sucesso!');
       logger.info('📡 Aguardando dados da Cedro API...');
+      logger.info(`🌐 WebSocket Server: ws://${config.websocket.host}:${config.websocket.port}`);
 
       // Exibir estatísticas iniciais
       const stats = await this.dataFlowManager.getSystemStats();
-      logger.info('📊 Estatísticas do sistema:', stats);
+      const wsStats = this.wsServer.getStats();
+      logger.info('📊 Estatísticas do sistema:', { ...stats, websocket: wsStats });
 
     } catch (error) {
       logger.error('❌ Erro ao iniciar servidor:', error);
@@ -243,6 +307,11 @@ class SmartTradeServer {
     try {
       // Cancelar todas as subscrições
       await this.subscriptionManager.unsubscribeAll();
+
+      // Parar sistema WebSocket
+      await this.wsServer.stop();
+      await this.dataBroadcaster.shutdown();
+      this.authManager.shutdown();
 
       // Parar sistema de dados (flush final)
       await this.dataFlowManager.shutdown();
