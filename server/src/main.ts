@@ -3,6 +3,9 @@ import { CedroTcpClient } from './cedro/client';
 import { CedroMessageParser } from './cedro/parser';
 import { SubscriptionManager } from './cedro/subscription-manager';
 import { CedroErrorHandler } from './cedro/error-handler';
+import { TradingSQLiteManager } from './data/sqlite-manager';
+import { TradingRedisManager } from './data/redis-manager';
+import { DataFlowManager } from './data/data-flow-manager';
 import { config, getConfigSummary } from './utils/config';
 import { createLogger } from './utils/logger';
 
@@ -12,6 +15,9 @@ class SmartTradeServer {
   private cedroClient: CedroTcpClient;
   private parser: CedroMessageParser;
   private subscriptionManager: SubscriptionManager;
+  private sqliteManager: TradingSQLiteManager;
+  private redisManager: TradingRedisManager;
+  private dataFlowManager: DataFlowManager;
   private isRunning: boolean = false;
 
   constructor() {
@@ -24,6 +30,19 @@ class SmartTradeServer {
     this.cedroClient = new CedroTcpClient(config.cedro);
     this.parser = new CedroMessageParser();
     this.subscriptionManager = new SubscriptionManager(this.cedroClient);
+
+    // Inicializar sistema de dados
+    this.sqliteManager = new TradingSQLiteManager(config.data.sqlitePath);
+    this.redisManager = new TradingRedisManager(config.data.redisUrl);
+    this.dataFlowManager = new DataFlowManager(
+      this.sqliteManager,
+      this.redisManager,
+      {
+        batchSize: config.data.batchSize,
+        batchInterval: 5000, // 5 segundos
+        bufferSize: config.data.bufferSize
+      }
+    );
 
     this.setupEventHandlers();
   }
@@ -53,6 +72,15 @@ class SmartTradeServer {
 
     this.cedroClient.on('message', (rawMessage) => {
       this.handleCedroMessage(rawMessage);
+    });
+
+    // Eventos do sistema de dados
+    this.dataFlowManager.on('dataProcessed', (info) => {
+      logger.debug('📊 Dados processados:', info);
+    });
+
+    this.dataFlowManager.on('error', (error) => {
+      logger.error('❌ Erro no sistema de dados:', error);
     });
 
     // Eventos do gerenciador de subscrições
@@ -136,39 +164,46 @@ class SmartTradeServer {
     }
   }
 
-  private processMarketData(message: any): void {
-    // Log dos dados recebidos (apenas para debug na Fase 2)
-    switch (message.type) {
-      case 'T': // Quote
-        logger.debug('📊 Quote recebida:', {
-          symbol: message.symbol,
-          lastPrice: message.data.lastPrice,
-          bidPrice: message.data.bidPrice,
-          askPrice: message.data.askPrice
-        });
-        break;
+  private async processMarketData(message: any): Promise<void> {
+    // Processar dados através do Data Flow Manager
+    try {
+      await this.dataFlowManager.processMarketData(message);
 
-      case 'B': // Book
-        logger.debug('📖 Book update:', {
-          symbol: message.symbol,
-          operation: message.data.operation,
-          side: message.data.side,
-          price: message.data.price,
-          volume: message.data.volume
-        });
-        break;
+      // Log resumido dos dados processados
+      switch (message.type) {
+        case 'T': // Quote
+          logger.debug('📊 Quote processada:', {
+            symbol: message.symbol,
+            lastPrice: message.data.lastPrice,
+            bidPrice: message.data.bidPrice,
+            askPrice: message.data.askPrice
+          });
+          break;
 
-      case 'V': // Trade
-        logger.debug('💰 Trade executado:', {
-          symbol: message.symbol,
-          price: message.data.price,
-          volume: message.data.volume,
-          time: message.data.time
-        });
-        break;
+        case 'B': // Book
+          logger.debug('📖 Book processado:', {
+            symbol: message.symbol,
+            operation: message.data.operation,
+            side: message.data.side,
+            price: message.data.price,
+            volume: message.data.volume
+          });
+          break;
+
+        case 'V': // Trade
+          logger.debug('💰 Trade processado:', {
+            symbol: message.symbol,
+            price: message.data.price,
+            volume: message.data.volume,
+            time: message.data.time
+          });
+          break;
+      }
+
+    } catch (error) {
+      logger.error('❌ Erro ao processar dados de mercado:', error);
     }
 
-    // TODO: Na Fase 3, enviar para sistema de dados
     // TODO: Na Fase 4, enviar via WebSocket para clientes
   }
 
@@ -178,11 +213,21 @@ class SmartTradeServer {
 
       this.isRunning = true;
 
+      // Inicializar sistema de dados
+      logger.info('🗄️ Inicializando sistema de dados...');
+      await this.sqliteManager.initialize();
+      await this.redisManager.connect();
+
       // Conectar ao Cedro
+      logger.info('🔌 Conectando à Cedro API...');
       await this.cedroClient.connect();
 
       logger.info('✅ Smart-Trade Server iniciado com sucesso!');
       logger.info('📡 Aguardando dados da Cedro API...');
+
+      // Exibir estatísticas iniciais
+      const stats = await this.dataFlowManager.getSystemStats();
+      logger.info('📊 Estatísticas do sistema:', stats);
 
     } catch (error) {
       logger.error('❌ Erro ao iniciar servidor:', error);
@@ -198,6 +243,9 @@ class SmartTradeServer {
     try {
       // Cancelar todas as subscrições
       await this.subscriptionManager.unsubscribeAll();
+
+      // Parar sistema de dados (flush final)
+      await this.dataFlowManager.shutdown();
 
       // Desconectar cliente Cedro
       this.cedroClient.disconnect();
