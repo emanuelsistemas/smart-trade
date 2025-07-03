@@ -9,7 +9,14 @@ Implementar cliente TCP/Telnet para conexão com Cedro Crystal, estabelecer aute
 ## 📋 Pré-requisitos
 - ✅ Fase 1 concluída (Checkpoint 1 validado)
 - 📄 Documentação Cedro API disponível
-- 🔑 Credenciais de acesso Cedro (para testes)
+- 🔑 Credenciais de acesso Cedro (DISPONÍVEIS)
+
+## 🔑 **Credenciais de Teste Cedro**
+- **Usuário**: emanuel_socket
+- **Senha**: bABqwq
+- **Servidor Principal**: datafeed1.cedrotech.com
+- **Servidor Backup**: datafeed2.cedrotech.com
+- **Porta**: 81
 
 ## 📋 Tarefas da Fase
 
