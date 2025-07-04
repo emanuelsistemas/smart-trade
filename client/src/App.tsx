@@ -1,6 +1,7 @@
 // 🚀 App principal - Smart-Trade (TEMA DARK)
 import { Layout } from './components/Layout/Layout';
 import { Dashboard } from './components/Dashboard/Dashboard';
+import { WebSocketDebug } from './components/Debug/WebSocketDebug';
 import { useSmartTradeWebSocket } from './hooks/useSmartTradeWebSocket';
 import { useAppStore } from './stores/useAppStore';
 
@@ -13,7 +14,12 @@ function App() {
   const renderView = () => {
     switch (activeView) {
       case 'dashboard':
-        return <Dashboard />;
+        return (
+          <>
+            <Dashboard />
+            <WebSocketDebug />
+          </>
+        );
       case 'orderflow':
         return (
           <div className="p-6">

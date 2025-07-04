@@ -12,16 +12,39 @@ Sistema proprietário de análise de trading com Order Flow Analysis, Footprint 
 
 ## 🚀 Quick Start
 
+### **Desenvolvimento Local (Windows):**
 ```bash
 # Instalar dependências
 npm install
 
-# Iniciar desenvolvimento
-npm run dev
-
-# Build para produção
-npm run build
+# Iniciar com scripts automáticos
+start-smart-trade.bat          # Modo desenvolvimento
+start-with-pm2.bat            # Modo PM2
+status-smart-trade.bat        # Verificar status
+stop-smart-trade.bat          # Parar sistema
 ```
+
+### **Deploy em VPS Linux:**
+```bash
+# 1. Clonar repositório
+git clone https://github.com/emanuelsistemas/smart-trade.git
+cd smart-trade
+
+# 2. Executar script de deploy
+chmod +x scripts/deploy-linux.sh
+./scripts/deploy-linux.sh
+
+# 3. Configurar Nginx (opcional)
+sudo cp nginx/smart-trade.conf /etc/nginx/sites-available/
+sudo ln -s /etc/nginx/sites-available/smart-trade /etc/nginx/sites-enabled/
+sudo nginx -t && sudo systemctl restart nginx
+```
+
+## 📖 **DOCUMENTAÇÃO COMPLETA**
+
+- 📋 **[DEPLOY-VPS-LINUX.md](DEPLOY-VPS-LINUX.md)** - Guia completo para VPS Linux
+- 🏗️ **[Arquitetura/](Arquitetura/)** - Documentação técnica detalhada
+- 📝 **[Doc Implementacao/](Doc%20Implementacao/)** - Cronograma e progresso
 
 ## 📚 Documentação
 

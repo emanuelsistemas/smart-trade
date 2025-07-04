@@ -70,15 +70,20 @@ export function useWebSocket(config: WebSocketConfig) {
   }, [config.heartbeatInterval]);
 
   const connect = useCallback(() => {
+    console.log('🔌 useWebSocket: Tentando conectar em', config.url);
+
     if (wsRef.current?.readyState === WebSocket.OPEN) {
+      console.log('⚠️ useWebSocket: Já conectado');
       return; // Já conectado
     }
 
+    console.log('🔄 useWebSocket: Iniciando conexão...');
     setState(prev => ({ ...prev, connectionState: 'connecting', error: null }));
 
     try {
       const ws = new WebSocket(config.url);
       wsRef.current = ws;
+      console.log('✅ useWebSocket: WebSocket criado');
 
       ws.onopen = () => {
         console.log('🌐 WebSocket conectado');
@@ -261,12 +266,21 @@ export function useWebSocket(config: WebSocketConfig) {
     }));
   }, [cleanup]);
 
-  // Conectar automaticamente ao montar
+  // Conectar automaticamente ao montar com delay
   useEffect(() => {
-    connect();
-    
+    console.log('🔌 useWebSocket: useEffect executado');
+
+    // Aguardar um pouco antes de conectar para garantir que o servidor esteja pronto
+    const timer = setTimeout(() => {
+      console.log('🔌 useWebSocket: Iniciando conexão após delay');
+      connect();
+    }, 1000);
+
     // Cleanup ao desmontar
-    return cleanup;
+    return () => {
+      clearTimeout(timer);
+      cleanup();
+    };
   }, [connect, cleanup]);
 
   return {

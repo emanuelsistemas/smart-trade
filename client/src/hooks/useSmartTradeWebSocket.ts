@@ -5,6 +5,8 @@ import { useAppStore } from '../stores/useAppStore';
 
 const WS_URL = 'ws://localhost:3002';
 
+console.log('🔌 useSmartTradeWebSocket: Inicializando hook...');
+
 export function useSmartTradeWebSocket() {
   const {
     isConnected,
@@ -158,9 +160,12 @@ export function useSmartTradeWebSocket() {
   // Auto-autenticação quando conectado
   useEffect(() => {
     if (isConnected && !isAuthenticated) {
-      // Usar token simples para desenvolvimento
-      // Em produção, obter token real do sistema de auth
-      const demoToken = 'demo-token-trader';
+      console.log('🔐 Tentando autenticar...');
+
+      // Para desenvolvimento, usar token simples
+      const demoToken = 'trader-dev-token';
+
+      console.log('🔐 Enviando token de desenvolvimento:', demoToken);
       authenticate(demoToken);
     }
   }, [isConnected, isAuthenticated, authenticate]);
