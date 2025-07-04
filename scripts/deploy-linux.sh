@@ -87,7 +87,7 @@ fi
 if [ -d "$INSTALL_DIR" ]; then
     log_info "Atualizando código existente..."
     cd "$INSTALL_DIR"
-    git pull origin master
+    git pull origin main
 else
     log_info "Clonando repositório..."
     sudo mkdir -p /var/www

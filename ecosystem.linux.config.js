@@ -35,7 +35,7 @@ module.exports = {
     production: {
       user: 'root',
       host: ['SEU_IP_VPS'],
-      ref: 'origin/master',
+      ref: 'origin/main',
       repo: 'https://github.com/emanuelsistemas/smart-trade.git',
       path: '/var/www/smart-trade',
       'pre-deploy-local': '',
