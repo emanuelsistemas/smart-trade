@@ -3,7 +3,7 @@ import { useEffect, useCallback } from 'react';
 import { useWebSocket } from './useWebSocket';
 import { useAppStore } from '../stores/useAppStore';
 
-const WS_URL = 'ws://localhost:3002';
+const WS_URL = 'ws://localhost:8081';
 
 console.log('🔌 useSmartTradeWebSocket: Inicializando hook...');
 

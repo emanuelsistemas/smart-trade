@@ -119,7 +119,7 @@ const initialState: AppState = {
   systemMessages: [],
   
   // UI
-  selectedSymbol: 'DOL',
+  selectedSymbol: 'PETR4',
   activeView: 'dashboard',
   sidebarCollapsed: false,
   

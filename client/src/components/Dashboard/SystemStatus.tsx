@@ -1,8 +1,8 @@
 // 🔧 Status do sistema - Smart-Trade (TEMA DARK)
-import { 
-  Server, 
-  Users, 
-  Activity, 
+import {
+  Server,
+  // Users, // REMOVIDO - Não usado para plataforma pessoal
+  Activity,
   Clock,
   AlertTriangle,
   CheckCircle,
@@ -55,8 +55,9 @@ export function SystemStatus({ stats, messages }: SystemStatusProps) {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        {/* Clients */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {/* Clients - OCULTO PARA USO PESSOAL */}
+        {/*
         <div className="bg-gray-900 border border-gray-600 rounded-lg p-3">
           <div className="flex items-center space-x-2 mb-2">
             <Users className="w-4 h-4 text-blue-400" />
@@ -70,6 +71,7 @@ export function SystemStatus({ stats, messages }: SystemStatusProps) {
           </div>
           <p className="text-xs text-gray-500">Autenticados/Total</p>
         </div>
+        */}
 
         {/* Subscriptions */}
         <div className="bg-gray-900 border border-gray-600 rounded-lg p-3">

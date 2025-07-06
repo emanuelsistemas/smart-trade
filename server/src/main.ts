@@ -171,10 +171,10 @@ class SmartTradeServer {
     try {
       logger.info('🎯 Iniciando subscrições de teste...');
 
-      // Subscrever DOL (Dólar Futuro) para testes
-      await this.subscriptionManager.subscribeQuote('DOL', true); // Com snapshot
-      await this.subscriptionManager.subscribeBook('DOL');
-      await this.subscriptionManager.subscribeTrades('DOL');
+      // Subscrever PETR4 (Petrobras) - símbolo mais líquido da B3
+      await this.subscriptionManager.subscribeQuote('PETR4', true); // Com snapshot
+      await this.subscriptionManager.subscribeBook('PETR4');
+      await this.subscriptionManager.subscribeTrades('PETR4');
 
       logger.info('✅ Subscrições de teste criadas');
 

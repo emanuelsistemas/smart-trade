@@ -3,7 +3,8 @@ import dotenv from 'dotenv';
 import path from 'path';
 
 // Carregar variáveis de ambiente
-dotenv.config();
+dotenv.config({ path: path.join(__dirname, '../../.env') });
+// Forçar reload das variáveis
 
 export interface AppConfig {
   // Servidor
@@ -53,49 +54,51 @@ export interface AppConfig {
   };
 }
 
-// Configuração padrão
-const defaultConfig: AppConfig = {
-  server: {
-    port: parseInt(process.env.SERVER_PORT || '3001'),
-    host: process.env.SERVER_HOST || 'localhost',
-    env: process.env.NODE_ENV || 'development'
-  },
-  
-  cedro: {
-    host: process.env.CEDRO_HOST || 'localhost',
-    port: parseInt(process.env.CEDRO_PORT || '81'),
-    softwareKey: process.env.CEDRO_SOFTWARE_KEY || '',
-    username: process.env.CEDRO_USERNAME || '',
-    password: process.env.CEDRO_PASSWORD || '',
-    timeout: parseInt(process.env.CEDRO_TIMEOUT || '30000'),
-    maxReconnectAttempts: parseInt(process.env.CEDRO_MAX_RECONNECT || '5'),
-    reconnectDelay: parseInt(process.env.CEDRO_RECONNECT_DELAY || '5000')
-  },
-  
-  websocket: {
-    port: parseInt(process.env.WS_PORT || '3002'),
-    host: process.env.WS_HOST || 'localhost',
-    heartbeatInterval: parseInt(process.env.WS_HEARTBEAT || '30000'),
-    jwtSecret: process.env.JWT_SECRET || 'smart-trade-secret-key-change-in-production',
-    jwtExpiresIn: process.env.JWT_EXPIRES_IN || '24h',
-    maxConnections: parseInt(process.env.WS_MAX_CONNECTIONS || '100'),
-    maxSessions: parseInt(process.env.WS_MAX_SESSIONS || '3')
-  },
-  
-  logging: {
-    level: process.env.LOG_LEVEL || 'info',
-    cedroLevel: process.env.CEDRO_LOG_LEVEL || 'debug',
-    maxFiles: parseInt(process.env.LOG_MAX_FILES || '5'),
-    maxSize: process.env.LOG_MAX_SIZE || '5242880'
-  },
-  
-  data: {
-    sqlitePath: process.env.SQLITE_PATH || path.join(process.cwd(), 'data', 'smart-trade.db'),
-    redisUrl: process.env.REDIS_URL,
-    batchSize: parseInt(process.env.DATA_BATCH_SIZE || '100'),
-    bufferSize: parseInt(process.env.DATA_BUFFER_SIZE || '1000')
-  }
-};
+// Função para criar configuração dinamicamente
+function createConfig(): AppConfig {
+  return {
+    server: {
+      port: parseInt(process.env.SERVER_PORT || '3001'),
+      host: process.env.SERVER_HOST || 'localhost',
+      env: process.env.NODE_ENV || 'development'
+    },
+
+    cedro: {
+      host: process.env.CEDRO_HOST || 'localhost',
+      port: parseInt(process.env.CEDRO_PORT || '81'),
+      softwareKey: process.env.CEDRO_SOFTWARE_KEY || '',
+      username: process.env.CEDRO_USERNAME || '',
+      password: process.env.CEDRO_PASSWORD || '',
+      timeout: parseInt(process.env.CEDRO_TIMEOUT || '30000'),
+      maxReconnectAttempts: parseInt(process.env.CEDRO_MAX_RECONNECT || '5'),
+      reconnectDelay: parseInt(process.env.CEDRO_RECONNECT_DELAY || '5000')
+    },
+
+    websocket: {
+      port: parseInt(process.env.WS_PORT || '3002'),
+      host: process.env.WS_HOST || 'localhost',
+      heartbeatInterval: parseInt(process.env.WS_HEARTBEAT || '30000'),
+      jwtSecret: process.env.JWT_SECRET || 'smart-trade-secret-key-change-in-production',
+      jwtExpiresIn: process.env.JWT_EXPIRES_IN || '24h',
+      maxConnections: parseInt(process.env.WS_MAX_CONNECTIONS || '100'),
+      maxSessions: parseInt(process.env.WS_MAX_SESSIONS || '3')
+    },
+
+    logging: {
+      level: process.env.LOG_LEVEL || 'info',
+      cedroLevel: process.env.CEDRO_LOG_LEVEL || 'debug',
+      maxFiles: parseInt(process.env.LOG_MAX_FILES || '5'),
+      maxSize: process.env.LOG_MAX_SIZE || '5242880'
+    },
+
+    data: {
+      sqlitePath: process.env.SQLITE_PATH || path.join(process.cwd(), 'data', 'smart-trade.db'),
+      redisUrl: process.env.REDIS_URL,
+      batchSize: parseInt(process.env.DATA_BATCH_SIZE || '100'),
+      bufferSize: parseInt(process.env.DATA_BUFFER_SIZE || '1000')
+    }
+  };
+}
 
 // Validar configuração
 function validateConfig(config: AppConfig): void {
@@ -135,8 +138,9 @@ function validateConfig(config: AppConfig): void {
 // Exportar configuração validada
 export const config: AppConfig = (() => {
   try {
-    validateConfig(defaultConfig);
-    return defaultConfig;
+    const currentConfig = createConfig();
+    validateConfig(currentConfig);
+    return currentConfig;
   } catch (error) {
     console.error('❌ Erro na configuração:', error);
     process.exit(1);

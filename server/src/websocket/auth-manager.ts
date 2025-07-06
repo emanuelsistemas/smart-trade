@@ -43,28 +43,19 @@ export class AuthManager {
   }
 
   private initializeDefaultUsers(): void {
-    // Usuário padrão para desenvolvimento
-    const defaultUser: UserProfile = {
-      userId: 'user-001',
+    // Usuário único para uso pessoal
+    const personalUser: UserProfile = {
+      userId: 'personal-001',
       username: 'trader',
-      permissions: ['read:quotes', 'read:trades', 'read:orderflow', 'read:footprint'],
+      permissions: ['*'], // Todas as permissões para uso pessoal
       createdAt: new Date()
     };
 
-    this.users.set('trader', defaultUser);
-    
-    // Usuário admin
-    const adminUser: UserProfile = {
-      userId: 'admin-001',
-      username: 'admin',
-      permissions: ['*'], // Todas as permissões
-      createdAt: new Date()
-    };
+    this.users.set('trader', personalUser);
 
-    this.users.set('admin', adminUser);
-    
-    logger.info('👥 Usuários padrão criados:', {
-      users: Array.from(this.users.keys())
+    logger.info('👤 Usuário pessoal criado:', {
+      userId: personalUser.userId,
+      username: personalUser.username
     });
   }
 
@@ -244,6 +235,8 @@ export class AuthManager {
     return null;
   }
 
+  // FUNÇÕES DE GERENCIAMENTO MULTI-USUÁRIO - DESABILITADAS PARA USO PESSOAL
+  /*
   createUser(username: string, permissions: string[]): UserProfile {
     if (this.users.has(username)) {
       throw new Error(`Usuário ${username} já existe`);
@@ -257,7 +250,7 @@ export class AuthManager {
     };
 
     this.users.set(username, user);
-    
+
     logger.info('👤 Usuário criado:', {
       userId: user.userId,
       username,
@@ -274,7 +267,7 @@ export class AuthManager {
     }
 
     user.permissions = [...permissions];
-    
+
     logger.info('🔧 Permissões atualizadas:', {
       userId: user.userId,
       username,
@@ -283,6 +276,7 @@ export class AuthManager {
 
     return true;
   }
+  */
 
   getActiveSessionsCount(userId: string): number {
     const userSessions = this.activeSessions.get(userId);

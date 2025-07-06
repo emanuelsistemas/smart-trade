@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teste WebSocket - Smart-Trade</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #1a1a1a;
+            color: white;
+            padding: 20px;
+        }
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+        }
+        .connected { background: #2d5a2d; }
+        .disconnected { background: #5a2d2d; }
+        .authenticated { background: #2d4a5a; }
+        .log {
+            background: #333;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        button {
+            background: #4a90e2;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover { background: #357abd; }
+    </style>
+</head>
+<body>
+    <h1>🔌 Teste WebSocket - Smart-Trade</h1>
+    
+    <div id="status" class="status disconnected">
+        ❌ Desconectado
+    </div>
+    
+    <div>
+        <button onclick="connect()">Conectar</button>
+        <button onclick="disconnect()">Desconectar</button>
+        <button onclick="authenticate()">Autenticar</button>
+        <button onclick="subscribe()">Subscrever PETR4</button>
+        <button onclick="clearLog()">Limpar Log</button>
+    </div>
+    
+    <div id="log" class="log">
+        <div>📋 Log de eventos:</div>
+    </div>
+
+    <script>
+        let ws = null;
+        let isConnected = false;
+        let isAuthenticated = false;
+        
+        const statusEl = document.getElementById('status');
+        const logEl = document.getElementById('log');
+        
+        function log(message) {
+            const time = new Date().toLocaleTimeString();
+            logEl.innerHTML += `<div>[${time}] ${message}</div>`;
+            logEl.scrollTop = logEl.scrollHeight;
+            console.log(message);
+        }
+        
+        function updateStatus() {
+            if (isAuthenticated) {
+                statusEl.className = 'status authenticated';
+                statusEl.innerHTML = '✅ Conectado e Autenticado';
+            } else if (isConnected) {
+                statusEl.className = 'status connected';
+                statusEl.innerHTML = '🔌 Conectado (não autenticado)';
+            } else {
+                statusEl.className = 'status disconnected';
+                statusEl.innerHTML = '❌ Desconectado';
+            }
+        }
+        
+        function connect() {
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                log('⚠️ Já conectado');
+                return;
+            }
+            
+            log('🔌 Conectando em ws://localhost:8081...');
+            ws = new WebSocket('ws://localhost:8081');
+            
+            ws.onopen = function() {
+                log('✅ Conectado ao WebSocket!');
+                isConnected = true;
+                isAuthenticated = false;
+                updateStatus();
+            };
+            
+            ws.onmessage = function(event) {
+                try {
+                    const data = JSON.parse(event.data);
+                    log(`📨 Mensagem: ${data.type} - ${JSON.stringify(data.payload)}`);
+                    
+                    if (data.type === 'authSuccess') {
+                        isAuthenticated = true;
+                        updateStatus();
+                    }
+                } catch (e) {
+                    log(`📨 Mensagem (raw): ${event.data}`);
+                }
+            };
+            
+            ws.onclose = function(event) {
+                log(`❌ Conexão fechada: ${event.code} - ${event.reason}`);
+                isConnected = false;
+                isAuthenticated = false;
+                updateStatus();
+            };
+            
+            ws.onerror = function(error) {
+                log(`❌ Erro WebSocket: ${error}`);
+            };
+        }
+        
+        function disconnect() {
+            if (ws) {
+                ws.close();
+                ws = null;
+            }
+        }
+        
+        function authenticate() {
+            if (!ws || ws.readyState !== WebSocket.OPEN) {
+                log('⚠️ Não conectado');
+                return;
+            }
+            
+            const message = {
+                type: 'auth',
+                payload: { token: 'trader-dev-token' },
+                timestamp: Date.now()
+            };
+            
+            log('🔐 Enviando autenticação...');
+            ws.send(JSON.stringify(message));
+        }
+        
+        function subscribe() {
+            if (!ws || ws.readyState !== WebSocket.OPEN) {
+                log('⚠️ Não conectado');
+                return;
+            }
+            
+            if (!isAuthenticated) {
+                log('⚠️ Não autenticado');
+                return;
+            }
+            
+            const channels = ['quotes:PETR4', 'trades:PETR4', 'book:PETR4', 'system'];
+            
+            channels.forEach(channel => {
+                const message = {
+                    type: 'subscribe',
+                    payload: { channel },
+                    timestamp: Date.now()
+                };
+                
+                log(`📡 Subscrevendo: ${channel}`);
+                ws.send(JSON.stringify(message));
+            });
+        }
+        
+        function clearLog() {
+            logEl.innerHTML = '<div>📋 Log de eventos:</div>';
+        }
+        
+        // Auto-conectar ao carregar
+        window.onload = function() {
+            log('🚀 Página carregada, conectando automaticamente...');
+            setTimeout(connect, 1000);
+        };
+        
+        updateStatus();
+    </script>
+</body>
+</html>
